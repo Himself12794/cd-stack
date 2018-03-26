@@ -1,0 +1,18 @@
+FROM jenkins/jenkins:2.112-slim
+USER root
+
+RUN apt-get update && \
+    apt-get install -y wget sshpass && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN wget https://download.docker.com/linux/static/stable/x86_64/docker-18.03.0-ce.tgz \
+    && tar -xvf docker-18.03.0-ce.tgz \
+    && mv docker/docker /usr/bin/ \
+    && rm -rf docker-18.03.0-ce.tgz docker \
+    && groupadd -g 999 docker \
+    && usermod -a -G docker jenkins
+
+USER jenkins
+
+ENTRYPOINT mkdir /var/jenkins_home/.ssh && ln -s /run/secrets/host_ssh_key /var/jenkins_home/.ssh/id_rsa.pub; /bin/tini -- /usr/local/bin/jenkins.sh
+
